@@ -1,5 +1,7 @@
 <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 px-4">
-    <x-page-header title="Endereços de entrega" subtitle="Os dados do endereço são criptografados no banco de dados.">
+    <x-account-nav />
+
+    <x-page-header title="Endereços de entrega" subtitle="Seus endereços ficam guardados de forma criptografada e só aparecem para o vendedor no momento da entrega.">
         @unless ($showForm)
             <x-primary-button type="button" wire:click="create">Novo endereço</x-primary-button>
         @endunless
@@ -81,11 +83,11 @@
                         <p class="font-semibold">{{ $address->label }}</p>
                         <p class="text-sm text-gray-700 mt-1">{{ $address->recipient_name }}</p>
                         <p class="text-sm text-gray-600">{{ $address->street }}, {{ $address->number }}{{ $address->complement ? ' - '.$address->complement : '' }}</p>
-                        <p class="text-sm text-gray-600">{{ $address->district }} · {{ $address->city }}/{{ $address->state->value }}</p>
+                        <p class="text-sm text-gray-600">{{ $address->district }}, {{ $address->city }}/{{ $address->state->value }}</p>
                         <p class="text-sm text-gray-600">CEP {{ $address->formattedZipCode() }}</p>
                     </div>
                     <div class="flex flex-col gap-2 text-sm">
-                        <button type="button" wire:click="edit({{ $address->id }})" class="text-indigo-700 underline">Editar</button>
+                        <button type="button" wire:click="edit({{ $address->id }})" class="text-brand-700 underline">Editar</button>
                         <button type="button" wire:click="delete({{ $address->id }})" wire:confirm="Excluir este endereço?" class="text-red-700 underline">Excluir</button>
                     </div>
                 </div>

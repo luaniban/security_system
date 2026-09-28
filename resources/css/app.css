@@ -1,7 +1,50 @@
+@font-face {
+    font-family: 'Manrope';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 800;
+    src: url('../fonts/manrope-latin-wght.woff2') format('woff2-variations');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+@layer components {
+    /* Thin progress bar (used for "faltam R$ X para o frete grátis"); no inline styles needed under the CSP. */
+    .progress-brand {
+        @apply h-1.5 w-full appearance-none overflow-hidden rounded-full bg-gray-200;
+    }
+
+    .progress-brand::-webkit-progress-bar {
+        @apply rounded-full bg-gray-200;
+    }
+
+    .progress-brand::-webkit-progress-value {
+        @apply rounded-full bg-brand-500;
+    }
+
+    .progress-brand::-moz-progress-bar {
+        @apply rounded-full bg-brand-500;
+    }
+}
+
 [x-cloak] {
     display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

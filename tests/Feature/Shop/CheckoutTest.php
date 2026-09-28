@@ -155,3 +155,40 @@ test('delivery flow: seller ships, buyer confirms delivery', function () {
     expect($order->fresh()->status)->toBe(OrderStatus::Delivered)
         ->and($order->fresh()->tracking_code)->toBe('BR123456789BR');
 });
+
+test('buy now adds the product to the cart and goes to checkout', function () {
+    $product = Product::factory()->create(['stock' => 5]);
+
+    Livewire::actingAs($this->buyer)
+        ->test(ShowProduct::class, ['product' => $product])
+        ->call('incrementQuantity')
+        ->call('buyNow')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('checkout'));
+
+    expect($this->buyer->cartItems()->first()->quantity)->toBe(2);
+});
+
+test('buy now does not redirect when the purchase is not allowed', function () {
+    $product = Product::factory()->for($this->buyer, 'seller')->create();
+
+    Livewire::actingAs($this->buyer)
+        ->test(ShowProduct::class, ['product' => $product])
+        ->call('buyNow')
+        ->assertForbidden();
+
+    expect($this->buyer->cartItems()->count())->toBe(0);
+});
+
+test('quantity stepper stays between 1 and the available stock', function () {
+    $product = Product::factory()->create(['stock' => 2]);
+
+    Livewire::actingAs($this->buyer)
+        ->test(ShowProduct::class, ['product' => $product])
+        ->call('decrementQuantity')
+        ->assertSet('quantity', 1)
+        ->call('incrementQuantity')
+        ->call('incrementQuantity')
+        ->call('incrementQuantity')
+        ->assertSet('quantity', 2);
+});

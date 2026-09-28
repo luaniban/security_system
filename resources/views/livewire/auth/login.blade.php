@@ -17,7 +17,7 @@
         </div>
 
         <label for="remember" class="inline-flex items-center">
-            <input wire:model="remember" id="remember" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+            <input wire:model="remember" id="remember" type="checkbox" class="rounded border-gray-300 text-brand-600 shadow-sm focus:ring-brand-500">
             <span class="ms-2 text-sm text-gray-600">Manter conectado</span>
         </label>
 
@@ -31,7 +31,7 @@
 
         <p class="text-sm text-gray-600 text-center pt-2 border-t">
             Não tem conta?
-            <a class="underline text-indigo-700" href="{{ route('register') }}">Cadastre-se</a>
+            <a class="underline text-brand-700" href="{{ route('register') }}">Cadastre-se</a>
         </p>
     </form>
 </div>

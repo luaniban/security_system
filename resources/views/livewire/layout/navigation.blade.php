@@ -1,21 +1,27 @@
 @php
     // Plain GET search handled by the catalog (#[Url(as: 'q')]); arrays or oversized input are ignored.
     $searchTerm = request()->routeIs('home') && is_string(request()->query('q')) ? mb_substr(request()->query('q'), 0, 100) : '';
+
+    // An order page belongs to "Vender" when the viewer is the seller of that order.
+    $viewedOrder = request()->route('order');
+    $viewingOwnSale = $viewedOrder instanceof \App\Models\Order && $viewedOrder->seller_id === auth()->id();
+    $inPurchases = request()->routeIs('orders.*') && ! $viewingOwnSale;
+    $inSelling = request()->routeIs('seller.*') || $viewingOwnSale;
 @endphp
 
 <nav x-data="{ open: false }" class="bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-4 h-16 lg:gap-8">
-            <a href="{{ route('home') }}" class="shrink-0 flex items-center gap-2 text-lg font-bold text-indigo-700">
-                <x-application-logo class="h-8 w-8 fill-current" />
+            <a href="{{ route('home') }}" class="shrink-0 flex items-center gap-2 text-lg font-extrabold tracking-tight text-gray-900" aria-label="{{ config('app.name') }}, página inicial">
+                <x-application-logo class="h-8 w-8 fill-brand-600" />
                 <span class="hidden sm:inline">{{ config('app.name') }}</span>
             </a>
 
             <form action="{{ route('home') }}" method="GET" role="search" wire:ignore class="hidden sm:flex flex-1 max-w-2xl">
                 <label for="site-search" class="sr-only">Buscar produtos</label>
                 <input id="site-search" name="q" type="search" value="{{ $searchTerm }}" maxlength="100" placeholder="O que você está procurando?"
-                       class="w-full rounded-s-lg border-gray-300 bg-gray-50 text-sm focus:border-indigo-500 focus:bg-white focus:ring-indigo-500">
-                <button type="submit" class="inline-flex items-center rounded-e-lg bg-indigo-600 px-4 text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2" aria-label="Buscar">
+                       class="w-full min-h-11 rounded-s-lg border-gray-300 bg-gray-50 text-sm focus:border-brand-500 focus:bg-white focus:ring-brand-500">
+                <button type="submit" class="inline-flex items-center rounded-e-lg bg-brand-600 px-4 text-white hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2" aria-label="Buscar">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
                 </button>
             </form>
@@ -25,8 +31,8 @@
                     <div class="hidden sm:block">
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
-                                <button type="button" class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-start hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-                                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                                <button type="button" class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-start hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
                                     <span class="hidden lg:flex flex-col leading-tight">
                                         <span class="text-xs text-gray-500">Olá, {{ \Illuminate\Support\Str::limit(\Illuminate\Support\Str::before(auth()->user()->name, ' '), 16) }}</span>
                                         <span class="text-sm font-semibold text-gray-900">Minha conta</span>
@@ -52,10 +58,10 @@
                     </div>
                 @else
                     <a href="{{ route('login') }}" class="hidden sm:inline-flex rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">Entrar</a>
-                    <a href="{{ route('register') }}" class="hidden sm:inline-flex rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Criar conta</a>
+                    <a href="{{ route('register') }}" class="hidden sm:inline-flex rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700">Criar conta</a>
                 @endauth
 
-                <a href="{{ route('cart') }}" class="relative flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                <a href="{{ route('cart') }}" class="relative flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                    aria-label="Carrinho{{ $cartCount > 0 ? ', '.$cartCount.' '.($cartCount === 1 ? 'item' : 'itens') : '' }}">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" /></svg>
                     @if ($cartCount > 0)
@@ -72,8 +78,8 @@
         <form action="{{ route('home') }}" method="GET" role="search" wire:ignore class="flex pb-3 sm:hidden">
             <label for="site-search-mobile" class="sr-only">Buscar produtos</label>
             <input id="site-search-mobile" name="q" type="search" value="{{ $searchTerm }}" maxlength="100" placeholder="Buscar produtos"
-                   class="w-full rounded-s-lg border-gray-300 bg-gray-50 text-sm focus:border-indigo-500 focus:bg-white focus:ring-indigo-500">
-            <button type="submit" class="inline-flex items-center rounded-e-lg bg-indigo-600 px-4 text-white" aria-label="Buscar">
+                   class="w-full min-h-11 rounded-s-lg border-gray-300 bg-gray-50 text-sm focus:border-brand-500 focus:bg-white focus:ring-brand-500">
+            <button type="submit" class="inline-flex items-center rounded-e-lg bg-brand-600 px-4 text-white" aria-label="Buscar">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
             </button>
         </form>
@@ -81,8 +87,8 @@
         <div class="hidden sm:flex h-11 gap-6 -mb-px">
             <x-nav-link :href="route('home')" :active="request()->routeIs('home', 'products.show')">Todos os produtos</x-nav-link>
             @auth
-                <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">Minhas compras</x-nav-link>
-                <x-nav-link :href="route('seller.products.index')" :active="request()->routeIs('seller.*')">Vender</x-nav-link>
+                <x-nav-link :href="route('orders.index')" :active="$inPurchases">Minhas compras</x-nav-link>
+                <x-nav-link :href="route('seller.products.index')" :active="$inSelling">Vender</x-nav-link>
                 <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">Painel</x-nav-link>
                 @can('admin')
                     <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.*')">Admin</x-nav-link>
@@ -98,8 +104,8 @@
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">Todos os produtos</x-responsive-nav-link>
             @auth
                 <x-responsive-nav-link :href="route('cart')" :active="request()->routeIs('cart')">Carrinho ({{ $cartCount }})</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">Minhas compras</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('seller.products.index')" :active="request()->routeIs('seller.*')">Vender</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('orders.index')" :active="$inPurchases">Minhas compras</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('seller.products.index')" :active="$inSelling">Vender</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">Painel</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('profile.edit')">Meu perfil</x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('addresses.index')">Endereços</x-responsive-nav-link>

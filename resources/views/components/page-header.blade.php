@@ -1,11 +1,13 @@
 @props(['title', 'subtitle' => null])
 
-<div class="flex flex-wrap items-end justify-between gap-4 mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-gray-900">{{ $title }}</h1>
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div class="min-w-0">
+        <h1 class="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">{{ $title }}</h1>
         @if ($subtitle)
-            <p class="mt-1 text-sm text-gray-500">{{ $subtitle }}</p>
+            <p class="mt-1.5 max-w-2xl text-sm text-gray-600">{{ $subtitle }}</p>
         @endif
     </div>
-    <div class="flex gap-2">{{ $slot }}</div>
+    @if ($slot->isNotEmpty())
+        <div class="flex flex-wrap gap-2">{{ $slot }}</div>
+    @endif
 </div>

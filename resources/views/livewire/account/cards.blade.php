@@ -1,4 +1,6 @@
 <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 px-4">
+    <x-account-nav />
+
     <x-page-header title="Cartões de crédito" subtitle="Número criptografado (AES-256). O CVV nunca é armazenado.">
         @unless ($showForm)
             <x-primary-button type="button" wire:click="create">Adicionar cartão</x-primary-button>

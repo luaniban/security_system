@@ -60,6 +60,35 @@ class ShowProduct extends Component
         $this->dispatch('cart-updated');
     }
 
+    /**
+     * Adds to the cart and goes straight to checkout.
+     */
+    public function buyNow(): void
+    {
+        $this->status = null;
+
+        $this->addToCart();
+
+        if ($this->status !== null) {
+            $this->redirect(route('checkout'));
+        }
+    }
+
+    public function incrementQuantity(): void
+    {
+        $this->quantity = min((int) $this->quantity + 1, $this->maxQuantity());
+    }
+
+    public function decrementQuantity(): void
+    {
+        $this->quantity = max((int) $this->quantity - 1, 1);
+    }
+
+    private function maxQuantity(): int
+    {
+        return max(1, min($this->product->stock, CartItem::MAX_QUANTITY));
+    }
+
     public function render(): View
     {
         return view('livewire.shop.show-product', [

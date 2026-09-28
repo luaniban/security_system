@@ -1,4 +1,6 @@
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 px-4">
+    <x-admin-nav />
+
     <x-page-header title="Trilha de auditoria" subtitle="Eventos de segurança: logins, falhas, bloqueios, pedidos, alterações de conta.">
         <x-select-input wire:model.live="event" aria-label="Filtrar evento">
             <option value="">Todos os eventos</option>
@@ -6,7 +8,6 @@
                 <option wire:key="ev-{{ $name }}" value="{{ $name }}">{{ $name }}</option>
             @endforeach
         </x-select-input>
-        <a href="{{ route('admin.users') }}" class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 hover:bg-gray-50">Usuários</a>
     </x-page-header>
 
     <x-card class="overflow-x-auto p-0">

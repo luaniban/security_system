@@ -16,7 +16,9 @@ class Dashboard extends Component
         $user = Auth::user();
 
         return view('livewire.dashboard', [
-            'recentPurchases' => $user->purchases()->latest()->limit(5)->get(),
+            'recentPurchases' => $user->purchases()->with('items:id,order_id,product_name,quantity')->latest()->limit(5)->get(),
+            'openPurchases' => $user->purchases()->whereIn('status', [OrderStatus::Paid, OrderStatus::Shipped])->count(),
+            'cartCount' => (int) $user->cartItems()->sum('quantity'),
             'salesToShip' => $user->sales()->where('status', OrderStatus::Paid)->count(),
             'activeProducts' => $user->products()->where('is_active', true)->count(),
             'addressCount' => $user->addresses()->count(),

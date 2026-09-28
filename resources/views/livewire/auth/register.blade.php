@@ -42,7 +42,7 @@
 
         <div>
             <label for="terms" class="inline-flex items-start gap-2">
-                <input wire:model="terms" id="terms" type="checkbox" class="mt-1 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                <input wire:model="terms" id="terms" type="checkbox" class="mt-1 rounded border-gray-300 text-brand-600 shadow-sm focus:ring-brand-500">
                 <span class="text-sm text-gray-600">
                     Li e concordo com a <a href="{{ route('privacy') }}" target="_blank" rel="noopener noreferrer" class="underline">Política de Privacidade</a> e com o tratamento dos meus dados pessoais conforme a LGPD.
                 </span>

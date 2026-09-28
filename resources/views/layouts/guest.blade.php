@@ -11,7 +11,7 @@
     </head>
     <body class="font-sans text-gray-900 antialiased bg-gray-50">
         <div class="min-h-screen flex flex-col items-center px-4 py-10 sm:justify-center">
-            <a href="{{ route('home') }}" class="flex items-center gap-2 text-2xl font-bold text-indigo-700">
+            <a href="{{ route('home') }}" class="flex items-center gap-2 text-2xl font-bold text-brand-700">
                 <x-application-logo class="w-10 h-10 fill-current" />
                 {{ config('app.name') }}
             </a>
@@ -20,7 +20,7 @@
                 {{ $slot }}
             </div>
 
-            <a href="{{ route('home') }}" class="mt-6 text-sm text-gray-600 hover:text-indigo-700 hover:underline">&larr; Voltar para a loja</a>
+            <a href="{{ route('home') }}" class="mt-6 text-sm text-gray-600 hover:text-brand-700 hover:underline">&larr; Voltar para a loja</a>
         </div>
     </body>
 </html>

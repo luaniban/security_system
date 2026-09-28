@@ -1,4 +1,6 @@
-<div class="max-w-3xl mx-auto sm:px-6 lg:px-8 px-4 space-y-6">
+<div class="max-w-4xl mx-auto sm:px-6 lg:px-8 px-4 space-y-6">
+    <x-account-nav />
+
     <x-page-header title="Meu perfil" subtitle="Seus dados pessoais são armazenados criptografados." />
 
     <livewire:account.update-profile-information />

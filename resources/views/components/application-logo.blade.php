@@ -1,3 +1,6 @@
-<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" {{ $attributes }}>
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" />
+{{-- Shield + shopping bag handle: "compra protegida". --}}
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" {{ $attributes }}>
+    <path d="M16 2.5 4.5 6.75v8.1c0 7.08 4.86 12.9 11.5 14.65 6.64-1.75 11.5-7.57 11.5-14.65v-8.1L16 2.5Z" />
+    <path d="M11.5 13.5V12a4.5 4.5 0 0 1 9 0v1.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" />
+    <path d="M10 13.5h12l-.9 8.1a1.6 1.6 0 0 1-1.6 1.4h-7a1.6 1.6 0 0 1-1.6-1.4L10 13.5Z" fill="#fff" />
 </svg>
