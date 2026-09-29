@@ -2,7 +2,7 @@
 @use('App\Services\ShippingCalculator')
 
 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 px-4 flex flex-col gap-10">
-    @if ($search === '' && $products->onFirstPage())
+    @if ($search === '')
         <section class="overflow-hidden rounded-3xl bg-brand-900 text-white">
             <div class="grid gap-8 px-5 py-7 sm:px-10 sm:py-12 lg:grid-cols-[1.4fr_1fr] lg:items-center">
                 <div>
@@ -38,12 +38,18 @@
                 @if ($search !== '')
                     <h1 class="text-2xl font-extrabold tracking-tight">Resultados para “{{ mb_substr($search, 0, 100) }}”</h1>
                     <p class="mt-1 text-sm text-gray-600">
-                        {{ $products->total() }} {{ $products->total() === 1 ? 'produto encontrado' : 'produtos encontrados' }}.
+                        {{ $total }} {{ $total === 1 ? 'produto encontrado' : 'produtos encontrados' }}.
                         <a href="{{ route('home') }}" class="font-medium text-brand-700 underline hover:text-brand-900">Limpar busca</a>
                     </p>
                 @else
                     <h2 class="text-2xl font-extrabold tracking-tight">Produtos à venda</h2>
-                    <p class="mt-1 text-sm text-gray-600">{{ $products->total() }} {{ $products->total() === 1 ? 'produto disponível' : 'produtos disponíveis' }}</p>
+                    <p class="mt-1 text-sm text-gray-600">
+                        @if ($products->count() < $total)
+                            Mostrando {{ $products->count() }} de {{ $total }} produtos
+                        @else
+                            {{ $total }} {{ $total === 1 ? 'produto disponível' : 'produtos disponíveis' }}
+                        @endif
+                    </p>
                 @endif
             </div>
 
@@ -51,7 +57,7 @@
             <div class="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0" role="group" aria-label="Ordenar produtos">
                 <div class="inline-flex min-w-max gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-card">
                     @foreach ($sortOptions as $value => $label)
-                        <button type="button" wire:key="sort-{{ $value }}" wire:click="$set('sort', '{{ $value }}')" aria-pressed="{{ $sort === $value ? 'true' : 'false' }}"
+                        <button type="button" wire:key="sort-{{ $value }}" wire:click="sortBy('{{ $value }}')" aria-pressed="{{ $sort === $value ? 'true' : 'false' }}"
                                 class="min-h-9 rounded-lg px-3 text-sm font-semibold transition duration-150 ease-out {{ $sort === $value ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
                             {{ $label }}
                         </button>
@@ -60,7 +66,8 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4" wire:loading.class="opacity-60">
+        {{-- Dimmed only while re-sorting: a scroll load appends to the grid and must not flash it. --}}
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4" wire:loading.class="opacity-60" wire:target="sortBy">
             @forelse ($products as $product)
                 <a wire:key="product-{{ $product->id }}" href="{{ route('products.show', $product) }}"
                    class="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
@@ -99,6 +106,30 @@
             @endforelse
         </div>
 
-        <div class="mt-8">{{ $products->links() }}</div>
+        @if ($hasMore)
+            {{-- Sentinel: entering the viewport (200px early) loads the next batch. The
+                 button is the fallback for keyboard users and for the case where the
+                 sentinel stays on screen after a load, so the observer does not re-fire. --}}
+            <div wire:key="catalog-load-more" wire:intersect.margin.200px="loadMore" class="mt-10 flex flex-col items-center gap-2">
+                <div wire:loading.flex wire:target="loadMore" role="status" class="min-h-11 items-center gap-3 text-sm font-semibold text-gray-600">
+                    <svg class="h-5 w-5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
+                    </svg>
+                    Carregando mais produtos…
+                </div>
+
+                <button type="button" wire:click="loadMore" wire:loading.remove wire:target="loadMore"
+                        class="inline-flex min-h-11 items-center rounded-lg border border-gray-200 bg-white px-5 text-sm font-semibold text-gray-700 shadow-card transition duration-150 ease-out hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
+                    Carregar mais produtos
+                </button>
+            </div>
+        @elseif ($reachedLimit)
+            <p class="mt-10 text-center text-sm text-gray-600">
+                Mostrando os primeiros {{ $products->count() }} produtos. Use a busca para encontrar algo específico.
+            </p>
+        @elseif ($products->isNotEmpty())
+            <p class="mt-10 text-center text-sm text-gray-500">Você chegou ao fim do catálogo.</p>
+        @endif
     </section>
 </div>

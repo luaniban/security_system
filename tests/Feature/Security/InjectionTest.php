@@ -32,7 +32,7 @@ test('sql injection payloads in the search are treated as plain text', function 
 
     Livewire::test(Catalog::class)
         ->set('search', $payload)
-        ->assertViewHas('products', fn ($products) => $products->total() === 0);
+        ->assertViewHas('products', fn ($products) => $products->isEmpty());
 
     expect(Product::count())->toBe(3);
 })->with([
