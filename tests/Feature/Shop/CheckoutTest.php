@@ -192,3 +192,86 @@ test('quantity stepper stays between 1 and the available stock', function () {
         ->call('incrementQuantity')
         ->assertSet('quantity', 2);
 });
+
+test('the checkout page sends the buyer back to the cart when it is empty', function () {
+    Livewire::actingAs($this->buyer)
+        ->test(PlaceOrder::class)
+        ->assertRedirect(route('cart'));
+});
+
+test('checkout fails when the cart was emptied in another tab', function () {
+    CartItem::factory()->for($this->buyer)->create();
+
+    $component = Livewire::actingAs($this->buyer)->test(PlaceOrder::class);
+    $this->buyer->cartItems()->delete();
+
+    $component->set('addressId', $this->address->id)
+        ->set('cardId', $this->card->id)
+        ->set('cvv', '123')
+        ->call('placeOrder')
+        ->assertHasErrors(['payment' => 'Seu carrinho está vazio.']);
+
+    expect(Order::count())->toBe(0);
+});
+
+test('an expired card is declined, audited and nothing is charged', function () {
+    $this->card->update(['exp_month' => 1, 'exp_year' => 2020]);
+    $product = Product::factory()->create(['stock' => 2]);
+    CartItem::factory()->for($this->buyer)->create(['product_id' => $product->id]);
+
+    checkout($this->buyer, $this->address, $this->card)->assertHasErrors(['payment' => 'Cartão vencido.']);
+
+    expect(Order::count())->toBe(0)
+        ->and($product->fresh()->stock)->toBe(2)
+        ->and($this->buyer->cartItems()->count())->toBe(1);
+
+    $this->assertDatabaseHas('audit_logs', ['event' => 'payment.declined', 'user_id' => $this->buyer->id]);
+});
+
+test('a product deactivated after being added to the cart can not be bought', function () {
+    $product = Product::factory()->create();
+    CartItem::factory()->for($this->buyer)->create(['product_id' => $product->id]);
+    $product->update(['is_active' => false]);
+
+    checkout($this->buyer, $this->address, $this->card)
+        ->assertHasErrors(['payment' => 'Um produto do carrinho não está mais disponível.']);
+
+    expect(Order::count())->toBe(0);
+});
+
+test('a cart row pointing to the buyer\'s own product is refused at checkout', function () {
+    $ownProduct = Product::factory()->for($this->buyer, 'seller')->create();
+    CartItem::factory()->for($this->buyer)->create(['product_id' => $ownProduct->id]);
+
+    checkout($this->buyer, $this->address, $this->card)
+        ->assertHasErrors(['payment' => 'Você não pode comprar o seu próprio produto.']);
+
+    expect(Order::count())->toBe(0);
+});
+
+test('shipping is charged per seller and is free from R$ 300,00', function () {
+    $cheap = Product::factory()->create(['price_cents' => 10000]);
+    $expensive = Product::factory()->create(['price_cents' => 30000]);
+    CartItem::factory()->for($this->buyer)->create(['product_id' => $cheap->id]);
+    CartItem::factory()->for($this->buyer)->create(['product_id' => $expensive->id]);
+
+    checkout($this->buyer, $this->address, $this->card)->assertHasNoErrors();
+
+    expect(Order::firstWhere('seller_id', $cheap->seller_id))
+        ->shipping_cents->toBe(2250)
+        ->total_cents->toBe(12250);
+
+    expect(Order::firstWhere('seller_id', $expensive->seller_id))
+        ->shipping_cents->toBe(0)
+        ->total_cents->toBe(30000);
+});
+
+test('the order keeps the address used at purchase time even if the address is edited later', function () {
+    $this->address->update(['street' => 'Rua Original']);
+    CartItem::factory()->for($this->buyer)->create();
+
+    checkout($this->buyer, $this->address, $this->card)->assertHasNoErrors();
+    $this->address->update(['street' => 'Rua Nova']);
+
+    expect(Order::sole()->shipping_address['street'])->toBe('Rua Original');
+});

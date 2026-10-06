@@ -20,6 +20,24 @@ test('responses carry hardening headers and a nonce based CSP', function () {
         ->not->toContain('unsafe-eval');
 });
 
+test('browser features and cross-origin access are locked down', function () {
+    $this->get('/')
+        ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), usb=(), payment=(self)')
+        ->assertHeader('Cross-Origin-Opener-Policy', 'same-origin')
+        ->assertHeader('Cross-Origin-Resource-Policy', 'same-origin')
+        ->assertHeaderMissing('X-Powered-By');
+});
+
+test('HSTS is sent over https', function () {
+    $this->get('https://localhost/')
+        ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+});
+
+test('HSTS is not sent over plain http', function () {
+    $this->get('http://localhost/')
+        ->assertHeaderMissing('Strict-Transport-Security');
+});
+
 test('authenticated pages are not cached', function () {
     $response = $this->actingAs(User::factory()->create())->get(route('dashboard'));
 

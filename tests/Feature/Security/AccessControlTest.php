@@ -2,9 +2,15 @@
 
 use App\Livewire\Account\Addresses;
 use App\Livewire\Account\Cards;
+use App\Livewire\Admin\AuditLogs;
+use App\Livewire\Admin\Users;
+use App\Livewire\Cart\ShowCart;
 use App\Livewire\Orders\ShowOrder;
 use App\Livewire\Seller\ListProducts;
+use App\Livewire\Seller\ProductForm;
+use App\Livewire\Shop\ShowProduct;
 use App\Models\Address;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\PaymentCard;
 use App\Models\Product;
@@ -94,6 +100,54 @@ test('the order bound to the component can not be swapped from the browser', fun
         ->test(ShowOrder::class, ['order' => $order])
         ->set('order', Order::factory()->create()->id);
 })->throws(CannotUpdateLockedPropertyException::class);
+
+test('a user can not change or remove another user\'s cart item', function () {
+    $victimItem = CartItem::factory()->create(['quantity' => 1]);
+    $intruder = User::factory()->create();
+
+    Livewire::actingAs($intruder)->test(ShowCart::class)->call('updateQuantity', $victimItem->id, 5)->assertNotFound();
+    Livewire::actingAs($intruder)->test(ShowCart::class)->call('remove', $victimItem->id);
+
+    expect($victimItem->fresh())->not->toBeNull()
+        ->quantity->toBe(1);
+});
+
+test('inactive products are hidden from everyone but their seller', function () {
+    $product = Product::factory()->inactive()->create();
+
+    $this->get(route('products.show', $product))->assertForbidden();
+    $this->actingAs(User::factory()->create())->get(route('products.show', $product))->assertForbidden();
+    $this->actingAs($product->seller)->get(route('products.show', $product))->assertOk();
+});
+
+test('guests are sent to the login page instead of adding to the cart', function () {
+    Livewire::test(ShowProduct::class, ['product' => Product::factory()->create()])
+        ->call('addToCart')
+        ->assertRedirect(route('login'));
+
+    expect(CartItem::count())->toBe(0);
+});
+
+test('unverified users are sent to verify their e-mail instead of adding to the cart', function () {
+    Livewire::actingAs(User::factory()->unverified()->create())
+        ->test(ShowProduct::class, ['product' => Product::factory()->create()])
+        ->call('addToCart')
+        ->assertRedirect(route('verification.notice'));
+
+    expect(CartItem::count())->toBe(0);
+});
+
+test('unverified users can not open the product form even when it is mounted directly', function () {
+    Livewire::actingAs(User::factory()->unverified()->create())
+        ->test(ProductForm::class)
+        ->assertForbidden();
+});
+
+test('admin components refuse non admins even when mounted directly', function (string $component) {
+    Livewire::actingAs(User::factory()->create())
+        ->test($component)
+        ->assertForbidden();
+})->with([Users::class, AuditLogs::class]);
 
 test('non admins can not reach the admin area', function () {
     $this->actingAs(User::factory()->create())->get(route('admin.users'))->assertForbidden();
