@@ -13,9 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [
-            SecurityHeaders::class,
-        ]);
+        // Global and outermost, so error responses (404 from routing or model binding,
+        // 503 maintenance, 413 oversized posts) also carry the hardening headers.
+        $middleware->prepend(SecurityHeaders::class);
+
+        // Only answer for the APP_URL host: password reset links are built from the
+        // Host header, so a forged Host would point them at an attacker's site.
+        $middleware->trustHosts();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

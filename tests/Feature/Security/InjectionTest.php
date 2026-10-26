@@ -4,6 +4,7 @@ use App\Livewire\Admin\Users;
 use App\Livewire\Auth\Login;
 use App\Livewire\Seller\ProductForm;
 use App\Livewire\Shop\Catalog;
+use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -111,11 +112,21 @@ test('code appended to a valid image is stripped by re-encoding (polyglot upload
     expect($stored)->toStartWith('RIFF')->not->toContain('<?php');
 });
 
-test('html typed as a login e-mail is shown escaped in the admin audit trail (stored XSS)', function () {
+test('login rejects html hidden in a quoted e-mail, so it never reaches the audit trail', function () {
     Livewire::test(Login::class)
         ->set('email', '"<script>alert(1)</script>"@example.com')
         ->set('password', 'whatever')
-        ->call('login');
+        ->call('login')
+        ->assertHasErrors('email');
+
+    expect(AuditLog::count())->toBe(0);
+});
+
+test('audit trail details are shown escaped to admins (stored XSS)', function () {
+    AuditLog::factory()->create([
+        'event' => 'auth.failed',
+        'context' => ['email' => '"<script>alert(1)</script>"@example.com'],
+    ]);
 
     $this->actingAs(User::factory()->admin()->create())
         ->get(route('admin.audit'))

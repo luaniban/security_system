@@ -34,7 +34,9 @@ class Login extends Component
     {
         try {
             $this->validate([
-                'email' => ['required', 'string', 'email', 'max:255'],
+                // Same strictness as registration: quoted local parts ("<script>"@x.com) are
+                // never a real account and would otherwise be written to the audit trail.
+                'email' => ['required', 'string', 'email:rfc,strict', 'max:255'],
                 'password' => ['required', 'string', 'max:128'],
             ]);
 

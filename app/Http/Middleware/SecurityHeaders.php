@@ -37,7 +37,8 @@ class SecurityHeaders
         }
 
         // Pages behind login may contain personal data: never let browsers/proxies cache them.
-        if ($request->user()) {
+        // Requests that never reached the session (e.g. an unknown route) have no user.
+        if ($request->hasSession() && $request->user()) {
             $headers['Cache-Control'] = 'no-store, private';
             $headers['Pragma'] = 'no-cache';
         }
