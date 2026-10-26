@@ -3,6 +3,7 @@
 use App\Models\PaymentCard;
 use App\Models\User;
 use App\Support\Luhn;
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
@@ -63,14 +64,40 @@ test('in production it asks for confirmation and creates nothing when declined',
     expect(User::count())->toBe(0);
 });
 
-test('the command is scheduled hourly and skipped in production', function () {
-    $event = collect(app(Schedule::class)->events())
-        ->sole(fn ($event) => str_contains($event->command, 'app:generate-users'));
+function generateUsersScheduleEvent(): Event
+{
+    return collect(app(Schedule::class)->events())
+        ->sole(fn (Event $event) => str_contains($event->command, 'app:generate-users'));
+}
+
+test('the command is scheduled hourly and runs outside production', function () {
+    $event = generateUsersScheduleEvent();
 
     expect($event->expression)->toBe('0 * * * *')
         ->and($event->filtersPass($this->app))->toBeTrue();
+});
 
+test('the scheduled run skips the production confirmation prompt, which would otherwise abort it', function () {
+    expect(generateUsersScheduleEvent()->command)->toContain('--force');
+});
+
+test('the schedule is skipped in production by default', function () {
     $this->app['env'] = 'production';
 
-    expect($event->filtersPass($this->app))->toBeFalse();
+    expect(generateUsersScheduleEvent()->filtersPass($this->app))->toBeFalse();
+});
+
+test('the schedule runs in production when GENERATE_FAKE_USERS is enabled', function () {
+    $this->app['env'] = 'production';
+    config(['app.generate_fake_users' => true]);
+
+    expect(generateUsersScheduleEvent()->filtersPass($this->app))->toBeTrue();
+});
+
+test('in production --force creates the users without asking', function () {
+    $this->app['env'] = 'production';
+
+    $this->artisan('app:generate-users', ['count' => 2, '--force' => true])->assertSuccessful();
+
+    expect(User::count())->toBe(2);
 });

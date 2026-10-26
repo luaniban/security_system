@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fake User Generation
+    |--------------------------------------------------------------------------
+    |
+    | The hourly "app:generate-users" schedule never runs in production unless
+    | this is explicitly enabled, e.g. on a demo or load-testing server.
+    |
+    */
+
+    'generate_fake_users' => (bool) env('GENERATE_FAKE_USERS', false),
+
 ];
