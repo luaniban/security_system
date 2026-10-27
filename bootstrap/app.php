@@ -1,10 +1,14 @@
 <?php
 
+use App\Exceptions\TamperedRequestException;
 use App\Http\Middleware\SecurityHeaders;
+use App\Services\AuditLogger;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -30,4 +34,22 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->dontFlash([
             'current_password', 'password', 'password_confirmation', 'number', 'cvv', 'cpf',
         ]);
+
+        // OWASP A09: a denied authorization is a security event. Laravel ignores it by default;
+        // record it in the audit trail instead (and keep it out of the error log).
+        $exceptions->stopIgnoring(AuthorizationException::class);
+        $exceptions->report(function (AuthorizationException $exception): false {
+            app(AuditLogger::class)->log('security.access_denied', auth()->user(), [
+                'method' => request()->method(),
+                'path' => '/'.ltrim(request()->path(), '/'),
+            ]);
+
+            return false;
+        });
+
+        // Livewire swallows tampered locked properties in production without logging them.
+        $exceptions->map(
+            CannotUpdateLockedPropertyException::class,
+            fn (CannotUpdateLockedPropertyException $exception) => new TamperedRequestException((string) $exception->property, $exception),
+        );
     })->create();
