@@ -101,7 +101,7 @@ class GenerateUsers extends Command
 
         $user = User::factory()->create([
             'name' => $name,
-            // Random suffix keeps e-mails unique across hourly runs, not only within one process.
+            // Random suffix keeps e-mails unique across scheduled runs, not only within one process.
             'email' => Str::slug($name, '.').'.'.Str::lower(Str::random(6)).'@'.fake()->safeEmailDomain(),
             'password' => $hashedPassword,
         ]);

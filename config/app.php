@@ -128,7 +128,7 @@ return [
     | Fake User Generation
     |--------------------------------------------------------------------------
     |
-    | The hourly "app:generate-users" schedule never runs in production unless
+    | The "app:generate-users" schedule (one user every five minutes) never runs in production unless
     | this is explicitly enabled, e.g. on a demo or load-testing server.
     |
     */

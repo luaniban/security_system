@@ -70,10 +70,11 @@ function generateUsersScheduleEvent(): Event
         ->sole(fn (Event $event) => str_contains($event->command, 'app:generate-users'));
 }
 
-test('the command is scheduled hourly and runs outside production', function () {
+test('one user is generated every five minutes outside production', function () {
     $event = generateUsersScheduleEvent();
 
-    expect($event->expression)->toBe('0 * * * *')
+    expect($event->expression)->toBe('*/5 * * * *')
+        ->and($event->command)->toContain('app:generate-users 1 --force')
         ->and($event->filtersPass($this->app))->toBeTrue();
 });
 
