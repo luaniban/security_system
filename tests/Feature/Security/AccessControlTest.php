@@ -3,6 +3,8 @@
 use App\Livewire\Account\Addresses;
 use App\Livewire\Account\Cards;
 use App\Livewire\Admin\AuditLogs;
+use App\Livewire\Admin\Orders as AdminOrders;
+use App\Livewire\Admin\Products as AdminProducts;
 use App\Livewire\Admin\Users;
 use App\Livewire\Cart\ShowCart;
 use App\Livewire\Orders\ShowOrder;
@@ -147,12 +149,11 @@ test('admin components refuse non admins even when mounted directly', function (
     Livewire::actingAs(User::factory()->create())
         ->test($component)
         ->assertForbidden();
-})->with([Users::class, AuditLogs::class]);
+})->with([Users::class, AuditLogs::class, AdminProducts::class, AdminOrders::class]);
 
-test('non admins can not reach the admin area', function () {
-    $this->actingAs(User::factory()->create())->get(route('admin.users'))->assertForbidden();
-    $this->actingAs(User::factory()->create())->get(route('admin.audit'))->assertForbidden();
-});
+test('non admins can not reach the admin area', function (string $route) {
+    $this->actingAs(User::factory()->create())->get(route($route))->assertForbidden();
+})->with(['admin.users', 'admin.products', 'admin.orders', 'admin.audit']);
 
 test('admins only see masked cpf and phone', function () {
     $customer = User::factory()->create(['cpf' => '52998224725', 'phone' => '41998765432']);

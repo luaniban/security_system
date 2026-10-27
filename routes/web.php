@@ -4,6 +4,8 @@ use App\Livewire\Account\Addresses;
 use App\Livewire\Account\Cards;
 use App\Livewire\Account\Profile;
 use App\Livewire\Admin\AuditLogs;
+use App\Livewire\Admin\Orders as AdminOrders;
+use App\Livewire\Admin\Products as AdminProducts;
 use App\Livewire\Admin\Users;
 use App\Livewire\Cart\ShowCart;
 use App\Livewire\Checkout\PlaceOrder;
@@ -46,6 +48,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('admin')->name('admin.')->middleware('can:admin')->group(function () {
         Route::livewire('usuarios', Users::class)->name('users');
+        Route::livewire('produtos', AdminProducts::class)->name('products');
+        Route::livewire('pedidos', AdminOrders::class)->name('orders');
         Route::livewire('auditoria', AuditLogs::class)->name('audit');
     });
 });
