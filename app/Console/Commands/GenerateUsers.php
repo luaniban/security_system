@@ -70,11 +70,25 @@ class GenerateUsers extends Command
         $hashedPassword = Hash::make($password);
 
         DB::transaction(function () use ($count, $isSeller, $hashedPassword): void {
-            $this->withProgressBar(range(1, $count), fn () => $this->createAccount($hashedPassword, $isSeller));
+            // Progress bar only on a terminal: scheduled runs append to a log file, which should get just the summary.
+            if ($this->output->isDecorated()) {
+                $this->withProgressBar(range(1, $count), fn () => $this->createAccount($hashedPassword, $isSeller));
+                $this->newLine(2);
+
+                return;
+            }
+
+            for ($created = 0; $created < $count; $created++) {
+                $this->createAccount($hashedPassword, $isSeller);
+            }
         });
 
-        $this->newLine(2);
-        $this->components->info($count.' '.($isSeller ? 'vendedores' : 'compradores').' gerados.');
+        $this->components->info(sprintf(
+            '%d %s gerados em %s.',
+            $count,
+            $isSeller ? 'vendedores' : 'compradores',
+            now()->format('d/m/Y H:i'),
+        ));
         // Raw output: the formatter would treat symbols such as "<", "\" or "[" as markup and print a different password.
         $this->output->writeln('Senha das contas geradas: '.$password, OutputInterface::OUTPUT_RAW);
 

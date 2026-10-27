@@ -27,6 +27,15 @@ test('reset password link can be requested', function () {
     Notification::assertSentTo($user, ResetPasswordNotification::class);
 });
 
+test('the password reset e-mail is written in portuguese', function () {
+    app()->setLocale('pt_BR');
+
+    $mail = (new ResetPasswordNotification('token'))->toMail(User::factory()->create());
+
+    expect($mail->subject)->toBe('Redefina sua senha')
+        ->and($mail->actionText)->toBe('Redefinir senha');
+});
+
 test('unknown e-mails get the same answer, so accounts can not be enumerated', function () {
     Notification::fake();
 

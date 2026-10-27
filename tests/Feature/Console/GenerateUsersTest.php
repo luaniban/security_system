@@ -77,6 +77,24 @@ test('the command is scheduled hourly and runs outside production', function () 
         ->and($event->filtersPass($this->app))->toBeTrue();
 });
 
+test('scheduled runs append their output, including the password, to a log file', function () {
+    $event = generateUsersScheduleEvent();
+
+    expect($event->output)->toBe(storage_path('logs/generated-users.log'))
+        ->and($event->shouldAppendOutput)->toBeTrue();
+});
+
+test('output written to a log gets a dated summary and the password, without a progress bar', function () {
+    $this->travelTo('2026-10-26 22:00:00');
+
+    Artisan::call('app:generate-users', ['count' => 2]);
+
+    expect(Artisan::output())
+        ->toContain('2 compradores gerados em 26/10/2026 22:00.')
+        ->toMatch('/Senha das contas geradas: \S+/')
+        ->not->toContain('2/2');
+});
+
 test('the scheduled run skips the production confirmation prompt, which would otherwise abort it', function () {
     expect(generateUsersScheduleEvent()->command)->toContain('--force');
 });

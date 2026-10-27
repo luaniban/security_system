@@ -12,4 +12,6 @@ Artisan::command('inspire', function () {
 Schedule::command('app:generate-users', ['--force'])
     ->hourly()
     ->withoutOverlapping()
+    // Keeps each run's password (and when it ran), so the generated accounts can be used to log in.
+    ->appendOutputTo(storage_path('logs/generated-users.log'))
     ->skip(fn (): bool => app()->isProduction() && ! config('app.generate_fake_users'));
